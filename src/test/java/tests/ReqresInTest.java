@@ -4,20 +4,23 @@ package tests;
 import models.CreateUserBodyModel;
 import models.CreateUserResponseModel;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 
 import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static specs.ReqresSpecs.*;
 
-
+@Tag("allTests")
 public class ReqresInTest extends TestBase {
 
     @Test
+    @DisplayName("проверка массива на null")
+    @Tag("regression")
     void listDataNotEmptyTest() {
         step("запрос на получение данных", () ->
                 given(requestRegres)
@@ -29,6 +32,8 @@ public class ReqresInTest extends TestBase {
 
 
     @Test
+    @DisplayName("проверка значения в массиве")
+    @Tag("smoke")
     void listDataIdTest() {
 
         step("запрос данных", () ->
@@ -41,6 +46,8 @@ public class ReqresInTest extends TestBase {
 
 
     @Test
+    @DisplayName("негативный тест для проверки 415 статуса")
+    @Tag("regression")
     void unSuccessfulCreate415Test() {
         step("не полный запрос", () ->
                 given(requestRegres415)
@@ -51,6 +58,7 @@ public class ReqresInTest extends TestBase {
 
     @Test
     @DisplayName("создание пользователя")
+    @Tag("regression")
     void successfulCreateUserTest() {
 
         CreateUserBodyModel authData = new CreateUserBodyModel();
@@ -67,13 +75,15 @@ public class ReqresInTest extends TestBase {
                                 .spec(responseCreateUserSpec)
                                 .extract().as(CreateUserResponseModel.class));
         step("проверка имени пользователя", () ->
-                assertEquals("morpheus", response.getName()));
+                assertThat(response.getName()).isEqualTo("morpheus"));
         step("проверка должности пользователя", () ->
-                assertEquals("leader", response.getJob()));
+                assertThat(response.getJob()).isEqualTo("leader"));
     }
 
 
     @Test
+    @DisplayName("негативный текст получение данных пользователя")
+    @Tag("smoke")
     void singleUserNotFound() {
         step("запрос на не зарегистрированного пользователя", () ->
                 given(requestRegres)
