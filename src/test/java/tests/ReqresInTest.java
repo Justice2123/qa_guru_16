@@ -1,84 +1,85 @@
 package tests;
 
-import models.CreateBodyModel;
+
+import models.CreateUserBodyModel;
+import models.CreateUserResponseModel;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+
+import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
-import static io.restassured.http.ContentType.JSON;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static specs.ReqresSpecs.*;
 
 
 public class ReqresInTest extends TestBase {
 
     @Test
     void listDataNotEmptyTest() {
-        given()
-                .log()
-                .all()
-                .get("/unknown")
-                .then().log().body()
-                .statusCode(200)
-                .body("data", is(notNullValue()));
+        step("запрос на получение данных", () ->
+                given(requestRegres)
+                        .get("/unknown")
+                        .then()
+                        .spec(responseStatus200)
+                        .body("data", is(notNullValue())));
     }
 
 
     @Test
     void listDataIdTest() {
-        given()
-                .log()
-                .all()
-                .get("/unknown")
-                .then().log().body()
-                .statusCode(200)
-                .body("data[0].id", is(1));
+
+        step("запрос данных", () ->
+                given(requestRegres)
+                    .get("/unknown")
+                    .then()
+                    .spec(responseStatus200))
+                    .body("data[0].id", is(1));
     }
 
 
     @Test
     void unSuccessfulCreate415Test() {
-        given()
-                .log()
-                .uri()
-                .post("/users")
-                .then().log().status()
-                .statusCode(415);
+        step("не полный запрос", () ->
+                given(requestRegres415)
+                        .post("/users")
+                        .then()
+                        .spec(responseStatus415));
     }
 
     @Test
-    void successfulCreateTest() {
+    @DisplayName("создание пользователя")
+    void successfulCreateUserTest() {
 
-        //String authData = "{\"name\": \"morpheus\", \"job\": \"leader\"}";
-
-        CreateBodyModel authData = new CreateBodyModel();
+        CreateUserBodyModel authData = new CreateUserBodyModel();
         authData.setName("morpheus");
         authData.setJob("leader");
 
-        given()
-                .body(authData)
-                .contentType(JSON)
-                .log().uri()
-                .when()
-                .post("/users")
-                .then()
-                .log().status()
-                .log().body()
-                .statusCode(201)
-                .body("name", is("morpheus"))
-                .body("job", is("leader"));
+        CreateUserResponseModel response =
+                step("отправка запроса на создание пользователя", () ->
+                        given(requestRegres)
+                                .body(authData)
+                                .when()
+                                .post("/users")
+                                .then()
+                                .spec(responseCreateUserSpec)
+                                .extract().as(CreateUserResponseModel.class));
+        step("проверка имени пользователя", () ->
+                assertEquals("morpheus", response.getName()));
+        step("проверка должности пользователя", () ->
+                assertEquals("leader", response.getJob()));
     }
 
 
     @Test
     void singleUserNotFound() {
-        given()
-                .log()
-                .all()
-                .get("/users/23")
-                .then()
-                .log()
-                .all()
-                .statusCode(404);
+        step("запрос на не зарегистрированного пользователя", () ->
+                given(requestRegres)
+                        .get("/users/23")
+                        .then()
+                        .spec(responseStatus404));
     }
 
 
